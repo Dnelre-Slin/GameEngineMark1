@@ -4,7 +4,7 @@
 
 int main() 
 {
-	std::cout << "hello world" << "  oh snap!!!!" << "Are you sure!?" << std::endl;
+	std::cout << "hello world" << "  oh snap!!!!" << "Are you sure!?" << " YES I AM" << std::endl;
 
 	System sys;
 	bool result = sys.Initialize();
