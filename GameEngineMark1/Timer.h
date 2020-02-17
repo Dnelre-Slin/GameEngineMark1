@@ -6,10 +6,6 @@
 #include <ctime>
 #include <chrono>
 
-#ifndef UNIX_TIME_STAMP
-#define UNIX_TIME_STAMP std::time(nullptr)
-#endif
-
 typedef std::function<void(void)> Action;
 typedef std::function<bool(int, int)> Cmp;
 
@@ -22,12 +18,14 @@ public:
 	};
 
 private:
-	std::map<int, Action, x> m_Callbacks;
-	std::time_t m_CurrentTimeStamp;
+	std::map<long long, Action, x> m_Callbacks;
+	long long m_CurrentTimeStampNano;
 	float m_DeltaTime;
 public:
-	int QueueAction(float ms, Action);
+	long long QueueAction(long milliseconds, Action);
+	long long QueueActionNS(long long nanoseconds, Action);
 	bool Tick();
 	GameTime();
+	long long Now();
 };
 

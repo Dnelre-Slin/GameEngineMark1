@@ -13,9 +13,9 @@ System::System()
 	m_Input = 0;
 	m_Graphics = 0;
 
-	m_Timer.QueueAction(5, []() {timerAction(5); });
-	m_Timer.QueueAction(12, []() {timerAction(12); });
-	m_Timer.QueueAction(0.7,[]() {timerAction(0.7); });
+	m_Timer.QueueAction(5000, []() {timerAction(5); });
+	m_Timer.QueueAction(12000, []() {timerAction(12); });
+	m_Timer.QueueAction(700,[]() {timerAction(0.7); });
 }
 
 
@@ -127,7 +127,8 @@ void System::Run()
 			result = Input() && 
 					 Timer() &&
 					 Physics() &&
-					 Frame();
+					 Render();
+
 			if(!result)
 			{
 				done = true;
@@ -140,7 +141,7 @@ void System::Run()
 }
 
 
-bool System::Frame()
+bool System::Render()
 {
 	// Do the frame processing for the graphics object.
 	return m_Graphics->Frame();

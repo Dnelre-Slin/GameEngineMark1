@@ -46,7 +46,7 @@ private:
 	bool Input();
 	bool Timer();
 	bool Physics();
-	bool Frame();
+	bool Render();
 	void InitializeWindows(int&, int&);
 	void ShutdownWindows();
 

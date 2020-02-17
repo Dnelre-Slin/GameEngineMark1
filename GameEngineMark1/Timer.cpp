@@ -3,28 +3,34 @@
 #include <limits>
 
 GameTime::GameTime() {
-	m_CurrentTimeStamp = UNIX_TIME_STAMP;
+	m_CurrentTimeStampNano = Now();
 	m_DeltaTime = std::numeric_limits<float>::min(); // Just in case
 }
 
-int GameTime::QueueAction(float ms, Action action)
+long long GameTime::QueueAction(long milliseconds, Action action)
 {
-	m_CurrentTimeStamp = UNIX_TIME_STAMP;
-	int index = (int)m_CurrentTimeStamp + (int)ms;
-	std::cout << "TimeStamp: " << index << "  ms: " << ms << std::endl;
+	return QueueActionNS((long long) (milliseconds * 1e6), action);
+}
+
+long long GameTime::QueueActionNS(long long nanoseconds, Action action)
+{
+	m_CurrentTimeStampNano = Now();
+	long long index = m_CurrentTimeStampNano + nanoseconds;
+	std::cout << "TimeStamp: " << index << "  ns: " << nanoseconds << std::endl;
 	m_Callbacks[index] = action;
-	return ms;
+	return nanoseconds;
 }
 
 bool GameTime::Tick()
 {
-	m_DeltaTime = UNIX_TIME_STAMP - m_CurrentTimeStamp;
-	m_CurrentTimeStamp = UNIX_TIME_STAMP;
+	m_DeltaTime = Now() - m_CurrentTimeStampNano;
+	m_CurrentTimeStampNano = Now();
+
 	for(auto it = m_Callbacks.cbegin(); it != m_Callbacks.cend();)
 	{
-		std::cout << "key: " << it->first << " time: " << m_CurrentTimeStamp << std::endl;
-		if (it->first < m_CurrentTimeStamp)
+		if (it->first < m_CurrentTimeStampNano)
 		{
+			std::cout << "key: " << it->first << " time: " << m_CurrentTimeStampNano << std::endl;
 			std::cout << "Invoking and removing at index " << it->first << std::endl;;
 			if (it->second != nullptr)
 			{
@@ -39,4 +45,8 @@ bool GameTime::Tick()
 	}
 
 	return true;
+}
+
+long long GameTime::Now() {
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
