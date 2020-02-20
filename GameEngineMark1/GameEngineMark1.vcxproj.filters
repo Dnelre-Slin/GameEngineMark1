@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ThreadPoolManager">
+      <UniqueIdentifier>{1fe23bc8-9a00-4568-8fe8-ba40add3d577}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThreadPoolManager\Headers">
+      <UniqueIdentifier>{fb71e751-5536-4d11-a2bc-72e2bd904cbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThreadPoolManager\Source">
+      <UniqueIdentifier>{c1dd19cb-3bb6-4dfb-8f95-8ff13f06f3d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -39,6 +48,12 @@
     <ClCompile Include="Physics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ThreadPoolManager.cpp">
+      <Filter>ThreadPoolManager\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadWorker.cpp">
+      <Filter>ThreadPoolManager\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d12.h">
@@ -58,6 +73,12 @@
     </ClInclude>
     <ClInclude Include="Physics.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadPoolManager.h">
+      <Filter>ThreadPoolManager\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadWorker.h">
+      <Filter>ThreadPoolManager\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

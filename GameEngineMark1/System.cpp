@@ -3,24 +3,74 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "System.h"
 #include <iostream>
+#include <chrono>
 
 void timerAction(int ms) {
 	std::cout << "Ran action as " << ms << std::endl;
 }
 
+void test()
+{
+	int n = 0;
+
+	while (n++ < 10)
+	{
+		std::cout << "Doing some work in test 1" << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	}
+}
+
+void test2()
+{
+	int n = 0;
+
+	while (n++ < 10)
+	{
+		std::cout << "Doing some work in test 2" << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	}
+}
+
+void test3()
+{
+	int n = 0;
+
+	while (n++ < 10)
+	{
+		std::cout << "Doing some work in test 3" << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+	}
+}
+
 System::System()
 {
-	m_Input = 0;
-	m_Graphics = 0;
+	m_applicationName = L"GameEngineMark1";
+	m_hinstance = nullptr;
+	m_hwnd = nullptr;
+	m_Graphics = nullptr;
+	m_Input = nullptr;
+	m_Graphics = nullptr;
+	
+	m_ThreadPoolManager.Run(test);
+	m_ThreadPoolManager.Run(test2);
+	m_ThreadPoolManager.Run(test3);
 
-	m_Timer.QueueAction(5000, []() {timerAction(5); });
+
+	/*m_Timer.QueueAction(5000, []() {timerAction(5); });
 	m_Timer.QueueAction(12000, []() {timerAction(12); });
-	m_Timer.QueueAction(700,[]() {timerAction(0.7); });
+	m_Timer.QueueAction(700,[]() {timerAction(0.7); });*/
 }
+
 
 
 System::System(const System& other)
 {
+	m_applicationName = L"GameEngineMark1";
+	m_hinstance = nullptr;
+	m_hwnd = nullptr;
+	m_Graphics = nullptr;
+	m_Input = nullptr;
+	m_Graphics = nullptr;
 }
 
 
@@ -144,6 +194,9 @@ void System::Run()
 bool System::Render()
 {
 	// Do the frame processing for the graphics object.
+	//auto r = m_Graphics->Frame();
+	//mutex_unlock(render);
+	//return r;
 	return m_Graphics->Frame();
 }
 
@@ -210,7 +263,7 @@ void System::InitializeWindows(int& screenHeight, int& screenWidth)
 	m_hinstance = GetModuleHandle(NULL);
 
 	// Give the application a name.
-	m_applicationName = "Engine";
+	m_applicationName = L"Engine";
 
 	// Setup the windows class with default settings.
 	wc.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
@@ -223,7 +276,7 @@ void System::InitializeWindows(int& screenHeight, int& screenWidth)
 	wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.lpszMenuName  = NULL;
-	wc.lpszClassName = (LPCWSTR)m_applicationName;
+	wc.lpszClassName = m_applicationName;
 	wc.cbSize        = sizeof(WNDCLASSEX);
 	
 	// Register the window class.
@@ -262,7 +315,7 @@ void System::InitializeWindows(int& screenHeight, int& screenWidth)
 	}
 
 	// Create the window with the screen settings and get the handle to it.
-	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, (LPCWSTR) m_applicationName, (LPCWSTR) m_applicationName,
+	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName,
 						    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
 						    posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
 
@@ -294,7 +347,7 @@ void System::ShutdownWindows()
 	m_hwnd = NULL;
 
 	// Remove the application instance.
-	UnregisterClass((LPCWSTR) m_applicationName, m_hinstance);
+	UnregisterClass(m_applicationName, m_hinstance);
 	m_hinstance = NULL;
 
 	// Release the pointer to this class.

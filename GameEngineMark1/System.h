@@ -24,6 +24,7 @@
 #include "Input.h"
 #include "Graphics.h"
 #include "Timer.h"
+#include "ThreadPoolManager.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +52,7 @@ private:
 	void ShutdownWindows();
 
 private:
-	LPCSTR m_applicationName;
+	LPCWSTR m_applicationName;
 	HINSTANCE m_hinstance;
 	HWND m_hwnd;
 
@@ -59,6 +60,8 @@ private:
 	Graphics* m_Graphics;
 
 	GameTime m_Timer;
+
+	ThreadPoolManager m_ThreadPoolManager;
 };
 
 
