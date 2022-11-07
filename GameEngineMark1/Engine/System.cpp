@@ -1,59 +1,74 @@
-////////////////////////////////////////////////////////////////////////////////
-// Filename: systemclass.cpp
-////////////////////////////////////////////////////////////////////////////////
 #include "System.h"
 #include <iostream>
 #include <chrono>
+
+#include "Threading/ThreadJob.h"
 
 void timerAction(int ms) {
 	std::cout << "Ran action as " << ms << std::endl;
 }
 
-void test()
+class test : public ThreadJob
 {
-	int n = 0;
-
-	while (n++ < 10)
+	int Execute() const override
 	{
-		std::cout << "Doing some work in test 1" << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	}
-}
+		int n = 0;
 
-void test2()
+		while (n++ < 10)
+		{
+			std::cout << "Doing some work in test 1, it " << n << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		}
+		return 0;
+	}
+};
+
+class test2 : public ThreadJob
 {
-	int n = 0;
-
-	while (n++ < 10)
+	int Execute() const override
 	{
-		std::cout << "Doing some work in test 2" << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	}
-}
+		int n = 0;
 
-void test3()
+		while (n++ < 10)
+		{
+			std::cout << "Doing some work in test 2, it " << n << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		}
+		return 0;
+	}
+};
+
+class test3 : public ThreadJob
 {
-	int n = 0;
-
-	while (n++ < 10)
+	int Execute() const override
 	{
-		std::cout << "Doing some work in test 3" << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+		int n = 0;
+
+		while (n++ < 10)
+		{
+			std::cout << "Time elapsed: " << GameTime::GetTimeElapsedSinceStart<Milliseconds>() << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+		}
+		return 0;
 	}
-}
+};
 
 System::System()
 {
-	m_applicationName = L"GameEngineMark1";
-	m_hinstance = nullptr;
-	m_hwnd = nullptr;
+	m_ApplicationName = L"GameEngineMark1";
+	m_Hinstance = nullptr;
+	m_Hwnd = nullptr;
 	m_Graphics = nullptr;
 	m_Input = nullptr;
 	m_Graphics = nullptr;
+
+	// test* a = new test();
+	// test2* b = new test2();
+	const test3* c = new test3();
 	
-	m_ThreadPoolManager.Run(test);
-	m_ThreadPoolManager.Run(test2);
-	m_ThreadPoolManager.Run(test3);
+	// m_ThreadPoolManager.Run(a);
+	// m_ThreadPoolManager.Run(b);
+	m_ThreadPoolManager.Run(c);
 
 
 	/*m_Timer.QueueAction(5000, []() {timerAction(5); });
@@ -65,9 +80,9 @@ System::System()
 
 System::System(const System& other)
 {
-	m_applicationName = L"GameEngineMark1";
-	m_hinstance = nullptr;
-	m_hwnd = nullptr;
+	m_ApplicationName = L"GameEngineMark1";
+	m_Hinstance = nullptr;
+	m_Hwnd = nullptr;
 	m_Graphics = nullptr;
 	m_Input = nullptr;
 	m_Graphics = nullptr;
@@ -81,13 +96,9 @@ System::~System()
 
 bool System::Initialize()
 {
-	int screenHeight, screenWidth;
-	bool result;
-
-
 	// Initialize the width and height of the screen to zero before sending the variables into the function.
-	screenHeight = 0;
-	screenWidth = 0;
+	int screenHeight = 0;
+	int screenWidth = 0;
 
 	// Initialize the windows api.
 	InitializeWindows(screenHeight, screenWidth);
@@ -110,8 +121,7 @@ bool System::Initialize()
 	}
 
 	// Initialize the graphics object.
-	result = m_Graphics->Initialize(screenHeight, screenWidth, m_hwnd);
-	if(!result)
+	if(!m_Graphics->Initialize(screenHeight, screenWidth, m_Hwnd))
 	{
 		return false;
 	}
@@ -123,49 +133,46 @@ bool System::Initialize()
 void System::Shutdown()
 {
 	// Release the graphics object.
-	if(m_Graphics)
+	if(m_Graphics != nullptr)
 	{
 		m_Graphics->Shutdown();
 		delete m_Graphics;
-		m_Graphics = 0;
+		m_Graphics = nullptr;
 	}
 
 	// Release the input object.
-	if(m_Input)
+	if(m_Input != nullptr)
 	{
 		delete m_Input;
-		m_Input = 0;
+		m_Input = nullptr;
 	}
 
+	m_ThreadPoolManager.ShutDown();
 	// Shutdown the window.
 	ShutdownWindows();
-	
-	return;
 }
 
 
 void System::Run()
 {
-	MSG msg;
-	bool done, result;
-
+	MSG Msg;
 
 	// Initialize the message structure.
-	ZeroMemory(&msg, sizeof(MSG));
+	ZeroMemory(&Msg, sizeof(MSG));
 	
 	// Loop until there is a quit message from the window or the user.
-	done = false;
+	bool done = false;
 	while(!done)
 	{
 		// Handle the windows messages.
-		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		if(PeekMessage(&Msg, m_Hwnd, 0, 0, PM_REMOVE))
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+			TranslateMessage(&Msg);
+			DispatchMessage(&Msg);
 		}
 
 		// If windows signals to end the application then exit out.
-		if(msg.message == WM_QUIT)
+		if(Msg.message == WM_QUIT)
 		{
 			done = true;
 		}
@@ -174,10 +181,10 @@ void System::Run()
 			// Otherwise do the frame processing.
 			
 
-			result = Input() && 
-					 Timer() &&
-					 Physics() &&
-					 Render();
+			bool result = Input() &&
+				Timer() &&
+				Physics() &&
+				Render();
 
 			if(!result)
 			{
@@ -208,7 +215,8 @@ bool System::Physics() {
 	return true;
 }
 
-bool System::Input() {
+bool System::Input() const
+{
 	
 	// Check if the user pressed escape and wants to exit the application.
 	if(m_Input->IsKeyDown(VK_ESCAPE))
@@ -220,15 +228,15 @@ bool System::Input() {
 }
 
 
-LRESULT CALLBACK System::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK System::MessageHandler(HWND Hwnd, UINT Umsg, WPARAM Wparam, LPARAM Lparam) const
 {
-	switch(umsg)
+	switch(Umsg)
 	{
 		// Check if a key has been pressed on the keyboard.
 		case WM_KEYDOWN:
 		{
 			// If a key is pressed send it to the input object so it can record that state.
-			m_Input->KeyDown((unsigned int)wparam);
+			m_Input->KeyDown(static_cast<unsigned>(Wparam));
 			return 0;
 		}
 
@@ -236,14 +244,14 @@ LRESULT CALLBACK System::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPA
 		case WM_KEYUP:
 		{
 			// If a key is released then send it to the input object so it can unset the state for that key.
-			m_Input->KeyUp((unsigned int)wparam);
+			m_Input->KeyUp(static_cast<unsigned>(Wparam));
 			return 0;
 		}
 
 		// Any other messages send to the default message handler as our application won't make use of them.
 		default:
 		{
-			return DefWindowProc(hwnd, umsg, wparam, lparam);
+			return DefWindowProc(Hwnd, Umsg, Wparam, Lparam);
 		}
 	}
 }
@@ -260,23 +268,23 @@ void System::InitializeWindows(int& screenHeight, int& screenWidth)
 	ApplicationHandle = this;
 
 	// Get the instance of this application.
-	m_hinstance = GetModuleHandle(NULL);
+	m_Hinstance = GetModuleHandle(nullptr);
 
 	// Give the application a name.
-	m_applicationName = L"Engine";
+	m_ApplicationName = L"Mark 1.0";
 
 	// Setup the windows class with default settings.
 	wc.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	wc.lpfnWndProc   = WndProc;
 	wc.cbClsExtra    = 0;
 	wc.cbWndExtra    = 0;
-	wc.hInstance     = m_hinstance;
-	wc.hIcon		 = LoadIcon(NULL, IDI_WINLOGO);
+	wc.hInstance     = m_Hinstance;
+	wc.hIcon		 = LoadIcon(nullptr, IDI_WINLOGO);
 	wc.hIconSm       = wc.hIcon;
-	wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-	wc.lpszMenuName  = NULL;
-	wc.lpszClassName = m_applicationName;
+	wc.hCursor       = LoadCursor(nullptr, IDC_ARROW);
+	wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+	wc.lpszMenuName  = nullptr;
+	wc.lpszClassName = m_ApplicationName;
 	wc.cbSize        = sizeof(WNDCLASSEX);
 	
 	// Register the window class.
@@ -292,8 +300,8 @@ void System::InitializeWindows(int& screenHeight, int& screenWidth)
 		// If full screen set the screen to maximum size of the users desktop and 32bit.
 		memset(&dmScreenSettings, 0, sizeof(dmScreenSettings));
 		dmScreenSettings.dmSize       = sizeof(dmScreenSettings);
-		dmScreenSettings.dmPelsHeight = (unsigned long)screenHeight;
-		dmScreenSettings.dmPelsWidth  = (unsigned long)screenWidth;
+		dmScreenSettings.dmPelsHeight = static_cast<unsigned long>(screenHeight);
+		dmScreenSettings.dmPelsWidth  = static_cast<unsigned long>(screenWidth);
 		dmScreenSettings.dmBitsPerPel = 32;			
 		dmScreenSettings.dmFields     = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
@@ -315,14 +323,14 @@ void System::InitializeWindows(int& screenHeight, int& screenWidth)
 	}
 
 	// Create the window with the screen settings and get the handle to it.
-	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName,
+	m_Hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_ApplicationName, m_ApplicationName,
 						    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-						    posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
+						    posX, posY, screenWidth, screenHeight, NULL, NULL, m_Hinstance, NULL);
 
 	// Bring the window up on the screen and set it as main focus.
-	ShowWindow(m_hwnd, SW_SHOW);
-	SetForegroundWindow(m_hwnd);
-	SetFocus(m_hwnd);
+	ShowWindow(m_Hwnd, SW_SHOW);
+	SetForegroundWindow(m_Hwnd);
+	SetFocus(m_Hwnd);
 
 	// Hide the mouse cursor.
 	ShowCursor(false);
@@ -339,16 +347,16 @@ void System::ShutdownWindows()
 	// Fix the display settings if leaving full screen mode.
 	if(FULL_SCREEN)
 	{
-		ChangeDisplaySettings(NULL, 0);
+		ChangeDisplaySettings(nullptr, 0);
 	}
 
 	// Remove the window.
-	DestroyWindow(m_hwnd);
-	m_hwnd = NULL;
+	DestroyWindow(m_Hwnd);
+	m_Hwnd = NULL;
 
 	// Remove the application instance.
-	UnregisterClass(m_applicationName, m_hinstance);
-	m_hinstance = NULL;
+	UnregisterClass(m_ApplicationName, m_Hinstance);
+	m_Hinstance = NULL;
 
 	// Release the pointer to this class.
 	ApplicationHandle = NULL;

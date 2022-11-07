@@ -1,15 +1,13 @@
 #include <iostream>
 #include <d3d12.h>
-#include "System.h"
+#include "Engine/System.h"
 
 int main() 
 {
 	std::cout << "hello world" << "  oh snap!!!!" << "Are you sure!?" << " YES I AM" << std::endl;
 
 	System sys;
-	bool result = sys.Initialize();
-
-	if(result) 
+	if(sys.Initialize()) 
 	{
 		sys.Run();
 	}
